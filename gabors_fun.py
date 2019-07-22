@@ -8,4 +8,7 @@ jp = [i*5 if i%2==0 else (i+1)*5-1 for i in range(20)]
 sp = [int(x) for x in range(100) if x % 10 == 0 or x%10 == 9]
 
 #%%
-
+#3. Sum all the values in myDCT
+jp_set = set(jp)
+sum(jp_set)
+max(jp_set)
