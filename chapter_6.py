@@ -6,15 +6,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tnrange
 from sklearn import linear_model
+from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LassoCV
 from sklearn.metrics import mean_squared_error
 pd.set_option('display.max_columns', 20)
 DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
 #%%
 def generate_x(n, mu, sigma, cols):
-    """Generates a predictor matrix with the given parameters. Cols refers to
-    the number of polynomial degrees generated."""
+    """Generates a predictor matrix with the given parameters.
+    A single vector is generated from a norm. Cols refers to the number of
+    vectors produced. (e.g. cols = 2, returns x and x^2)
+    """
     x = np.random.normal(mu, sigma, n)
-#    pdb.set_trace()
     predictors = []
     for i in range(1, cols):
         predictors.append(np.power(x, i))
@@ -22,9 +25,12 @@ def generate_x(n, mu, sigma, cols):
     return df
 
 def generate_response(n, mu, sigma, beta, d):
-    """Generates random data points n, from a normal distribution centered at
-    mu with variance sigma."""
-    noise = np.random.normal(0, 1, 100)
+    """Produces both a feature matrix and response vector
+    Response vector is generated from some set of true parameters (beta)
+    combined with the feature matrix with a noise feature added in.
+    Feature matrix is created by above helper method.
+    """
+    noise = np.random.normal(0, 1, n)
     X = generate_x(n, mu, sigma, d)
     features = X.iloc[:, :len(beta)]
     y = features.dot(beta) + noise
@@ -82,10 +88,11 @@ def forward_selection(X, y):
     best_models = []
     curr_model = np.array([])
     available_features = list(X.columns)
-    #Loop over each possible feature count.
+    #Loop over each feature count.
     for i in range(X.shape[1]):
         best_score = sys.maxsize
         best_feature = -1
+        #Loop over possible one feature additions
         for feature in available_features:
             test_model = np.concatenate([curr_model, [feature]])
             rss, r_2 = fit_linear_reg(X[test_model], y)
@@ -100,7 +107,7 @@ def forward_selection(X, y):
 def backward_selection(X, y):
     """Linear model selection via forward selection"""
     curr_model = list(X.columns)
-    best_models = [curr_model]
+    best_models = [np.array(curr_model)]
     for i in range(1, X.shape[1]):
         best_score = sys.maxsize
         best_feature = -1
@@ -132,17 +139,38 @@ def get_metrics(best_models, X, y):
                                 len(features), 'features': [features]})
         models.append(metadata)
     return pd.concat(models)
+#%%
+def lasso_alpha(regr):
+    """Produces a scatterplot for lambda selection"""
+    mse_path = regr.mse_path_
+    mse_kfold = np.mean(mse_path, axis=1)
+    alphas = regr.alphas_
+    plt.title('Scatter plot lambda vs. MSE K-fold CV')
+    plt.xlabel('Lambda value')
+    plt.ylabel('5-Fold CV MSE')
+    plt.scatter(alphas, mse_kfold)
+
+def lasso_fit(X, y, k):
+    """Runs a lasso regression with k-fold cross-validation"""    
+    regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
+    lasso_alpha(regr)
+    return regr
 
 #%%
 beta = np.array([15, 2, 1])
-X, y = generate_response(100, 7, 3.8, beta, 10)
-RSS, r2 = fit_linear_reg(X, y)
+beta_2 = np.array([0, 0, 0, 0, 0, 0, 0.05])
+X, y = generate_response(1000, 7, 3.8, beta_2, 10)
 result_df = best_subset(X, y)
 result_df.sort_values(by=['R_squared'], ascending=False).head()
 result_df.sort_values(by=['BIC']).head()
-best_model = result_df.sort_values(by=['adj_r2'], ascending=False).head(1)
+result_df.sort_values(by=['adj_r2'], ascending=False).head(1)
 best_forward = forward_selection(X, y)
 best_backward = backward_selection(X, y)
 #%%
 forward_metrics = get_metrics(best_forward, X, y)
 backward_metrics = get_metrics(best_backward, X, y)
+#%%
+lasso_regr = lasso_fit(X, y, 5)
+lasso_regr.coef_
+lasso_regr.intercept_
+y.mean()
