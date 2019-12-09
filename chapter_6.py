@@ -85,10 +85,16 @@ def forward_selection(X, y):
     for i in range(X.shape[1]):
         best_score = sys.maxint
         best_feature = -1
-        for j in 
+        for feature in available_features:
+            rss, r_2 = fit_linear_reg(X[curr_model.append(feature)], y)
+            if rss < best_score:
+                best_score = rss
+                best_feature = feature
+        available_features.remove(best_feature)
+        curr_model.append(best_feature)
+        best_models.append(curr_model)
+    return best_models
         
-        
-    
     
 #%%
 beta = np.array([15, 2, 1])
