@@ -1,18 +1,18 @@
-'''Linear Model Selection and Regularization'''
+"""Linear Model Selection and Regularization"""
 import itertools
 import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from tqdm import tnrange, tqdm_notebook
+from tqdm import tnrange
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 pd.set_option('display.max_columns', 20)
 DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
 #%%
-def generate_X(n, mu, sigma, cols):
-    '''Generates a predictor matrix with the given parameters. Cols refers to
-    the number of polynomial degrees generated.'''
+def generate_x(n, mu, sigma, cols):
+    """Generates a predictor matrix with the given parameters. Cols refers to
+    the number of polynomial degrees generated."""
     x = np.random.normal(mu, sigma, n)
 #    pdb.set_trace()
     predictors = []
@@ -22,47 +22,47 @@ def generate_X(n, mu, sigma, cols):
     return df
 
 def generate_response(n, mu, sigma, beta, d):
-    '''Generates random data points n, from a normal distribution centered at
-    mu with variance sigma.'''
+    """Generates random data points n, from a normal distribution centered at
+    mu with variance sigma."""
     noise = np.random.normal(0, 1, 100)
-    X = generate_X(n, mu, sigma, d)
-    features = X.iloc[:,:len(beta)]
+    X = generate_x(n, mu, sigma, d)
+    features = X.iloc[:, :len(beta)]
     y = features.dot(beta) + noise
     return X, y
 
 #%%
 def mallow_cp(RSS, var, n, d):
-    '''Calculates Mallows Cp'''
+    """Calculates Mallows Cp"""
     return (RSS + 2 * d * var)/n
 
 def BIC(RSS, var, n, d):
-    '''Calculates BIC Criterion'''
+    """Calculates BIC Criterion"""
     return (RSS + np.log(n) * d * var)/(n*var)
 
 def adjusted_r2(RSS, y, d):
-    '''Calculates adjusted r^2'''
+    """Calculates adjusted r^2"""
     n = len(y)
     TSS = np.sum((y - np.mean(y))**2)
     return 1 - (RSS/(n - d - 1))/(TSS/(n-1))
-    
+
 #%%
 #Feature selection methods
-def fit_linear_reg(X,Y):
-    '''Fit linear regression model and return RSS and R squared values'''
-    model_k = linear_model.LinearRegression(fit_intercept = True)
-    model_k.fit(X,Y)
-    RSS = mean_squared_error(Y,model_k.predict(X)) * len(Y)
-    R_squared = model_k.score(X,Y)
+def fit_linear_reg(X, Y):
+    """Fit linear regression model and return RSS and R squared values"""
+    model_k = linear_model.LinearRegression(fit_intercept=True)
+    model_k.fit(X, Y)
+    RSS = mean_squared_error(Y, model_k.predict(X)) * len(Y)
+    R_squared = model_k.score(X, Y)
     return RSS, R_squared
 
 def best_subset(X, y):
-    '''Runs a linear model fit for every possible combination of features'''
-    RSS_list, R_squared_list, feature_list = [],[],[]
+    """Runs a linear model fit for every possible combination of features"""
+    RSS_list, R_squared_list, feature_list = [], [], []
     numb_features = []
     #Looping over k = 1 to k = 11 features in X
-    for k in tnrange(1,len(X.columns) + 1, desc = 'Loop...'):
+    for k in tnrange(1, len(X.columns) + 1, desc='Loop...'):
         #Looping over all possible combinations: from 11 choose k
-        for combo in itertools.combinations(X.columns,k):
+        for combo in itertools.combinations(X.columns, k):
             tmp_result = fit_linear_reg(X[list(combo)], y)   #Store temp result
             RSS_list.append(tmp_result[0])                   #Append lists
             R_squared_list.append(tmp_result[1])
@@ -70,15 +70,15 @@ def best_subset(X, y):
             numb_features.append(len(combo))
     variance = np.var(y)
     #Store in DataFrame
-    df = pd.DataFrame({'numb_features': numb_features,'RSS': RSS_list, \
-                       'R_squared':R_squared_list,'features':feature_list})
+    df = pd.DataFrame({'numb_features': numb_features, 'RSS': RSS_list, 
+                       'R_squared': R_squared_list, 'features': feature_list})
     df['BIC'] = df.apply(lambda x: BIC(x.RSS, variance, len(y), len(x.features)), axis=1)
     df['Cp'] = df.apply(lambda x: mallow_cp(x.RSS, variance, len(y), len(x.features)), axis=1)
     df['adj_r2'] = df.apply(lambda x: adjusted_r2(x.RSS, y, len(x.features)), axis=1)
     return df
 
 def forward_selection(X, y):
-    '''Linear model selection via forward selection'''
+    """Linear model selection via forward selection"""
     best_models = []
     curr_model = np.array([])
     available_features = list(X.columns)
@@ -98,7 +98,7 @@ def forward_selection(X, y):
     return best_models
 
 def backward_selection(X, y):
-    '''Linear model selection via forward selection'''
+    """Linear model selection via forward selection"""
     curr_model = list(X.columns)
     best_models = [curr_model]
     for i in range(1, X.shape[1]):
@@ -116,7 +116,10 @@ def backward_selection(X, y):
     return best_models
 
 def get_metrics(best_models, X, y):
-    '''Get BIC criterion, Adjusted R^2, Mallows Cp'''
+    """Returns a dataframe of BIC criterion, Adjusted R^2, Mallows Cp
+        best_models -- List of generated models. Each model is represented as a
+        list of feature column names.
+    """
     variance = np.var(y)
     models = []
     for features in best_models:
@@ -124,9 +127,9 @@ def get_metrics(best_models, X, y):
         mal_cp = mallow_cp(rss, variance, len(y), len(features))
         bic = BIC(rss, variance, len(y), len(features))
         adj_r2 = adjusted_r2(rss, y, len(features))
-        metadata = pd.DataFrame({'RSS' : rss, 'R_squared': r_2, 'Cp': mal_cp,\
-                                 'BIC': bic, 'adj_r2': adj_r2, 'numb_features':\
-                                 len(features), 'features': [features]})
+        metadata = pd.DataFrame({'RSS': rss, 'R_squared': r_2, 'Cp': mal_cp,
+                                 'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
+                                len(features), 'features': [features]})
         models.append(metadata)
     return pd.concat(models)
 
