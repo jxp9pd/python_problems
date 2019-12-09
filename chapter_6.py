@@ -99,9 +99,9 @@ def forward_selection(X, y):
 
 def backward_selection(X, y):
     '''Linear model selection via forward selection'''
-    best_models = []
     curr_model = list(X.columns)
-    for i in range(1, X.shape[1]+1):
+    best_models = [curr_model]
+    for i in range(1, X.shape[1]):
         best_score = sys.maxsize
         best_feature = -1
         for feature in curr_model:
@@ -113,14 +113,12 @@ def backward_selection(X, y):
         X = X.drop(best_feature, axis=1)
         curr_model.remove(best_feature)
         best_models.append(np.array(curr_model))
-        print(best_models)
     return best_models
 
 def get_metrics(best_models, X, y):
     '''Get BIC criterion, Adjusted R^2, Mallows Cp'''
     variance = np.var(y)
     models = []
-#    pdb.set_trace()
     for features in best_models:
         rss, r_2 = fit_linear_reg(X[features], y)
         mal_cp = mallow_cp(rss, variance, len(y), len(features))
@@ -131,7 +129,6 @@ def get_metrics(best_models, X, y):
                                  len(features), 'features': [features]})
         models.append(metadata)
     return pd.concat(models)
-#%%
 
 #%%
 beta = np.array([15, 2, 1])
