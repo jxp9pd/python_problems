@@ -79,23 +79,46 @@ def best_subset(X, y):
 def forward_selection(X, y):
     '''Linear model selection via forward selection'''
     best_models = []
-    curr_model = []
+    curr_model = np.array([])
     available_features = list(X.columns)
     #Loop over each possible feature count.
     for i in range(X.shape[1]):
-        best_score = sys.maxint
+        best_score = sys.maxsize
         best_feature = -1
         for feature in available_features:
-            rss, r_2 = fit_linear_reg(X[curr_model.append(feature)], y)
+            test_model = np.concatenate([curr_model, [feature]])
+            rss, r_2 = fit_linear_reg(X[test_model], y)
             if rss < best_score:
                 best_score = rss
                 best_feature = feature
         available_features.remove(best_feature)
-        curr_model.append(best_feature)
+        curr_model = np.append(curr_model, best_feature)
         best_models.append(curr_model)
     return best_models
-        
-    
+
+def backward_selection(X, y):
+    '''Linear model selection via forward selection'''
+    best_models = []
+    curr_model = list(X.columns)
+    for i in range(1, X.shape[1]):
+        best_score = sys.maxsize
+        best_feature = -1
+        #pdb.set_trace()
+        for feature in curr_model:
+            test_model = X.drop(feature, axis=1)
+            rss, r_2 = fit_linear_reg(test_model, y)
+            if rss < best_score:
+                best_score = rss
+                best_feature = feature
+        X = X.drop(best_feature, axis=1)
+#        curr_model = np.delete(curr_model, best_feature)
+        curr_model.remove(best_feature)
+        best_models.append(np.array(curr_model))
+        print(best_models)
+    return best_models
+best_subset = best_subset(X, y)
+best_forward = forward_selection(X, y)
+best_backward = backward_selection(X, y)
 #%%
 beta = np.array([15, 2, 1])
 X, y = generate_response(100, 7, 3.8, beta, 10)
