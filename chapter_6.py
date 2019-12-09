@@ -46,6 +46,7 @@ def adjusted_r2(RSS, y, d):
     return 1 - (RSS/(n - d - 1))/(TSS/(n-1))
     
 #%%
+#Feature selection methods
 def fit_linear_reg(X,Y):
     '''Fit linear regression model and return RSS and R squared values'''
     model_k = linear_model.LinearRegression(fit_intercept = True)
@@ -100,10 +101,9 @@ def backward_selection(X, y):
     '''Linear model selection via forward selection'''
     best_models = []
     curr_model = list(X.columns)
-    for i in range(1, X.shape[1]):
+    for i in range(1, X.shape[1]+1):
         best_score = sys.maxsize
         best_feature = -1
-        #pdb.set_trace()
         for feature in curr_model:
             test_model = X.drop(feature, axis=1)
             rss, r_2 = fit_linear_reg(test_model, y)
@@ -111,14 +111,28 @@ def backward_selection(X, y):
                 best_score = rss
                 best_feature = feature
         X = X.drop(best_feature, axis=1)
-#        curr_model = np.delete(curr_model, best_feature)
         curr_model.remove(best_feature)
         best_models.append(np.array(curr_model))
         print(best_models)
     return best_models
-best_subset = best_subset(X, y)
-best_forward = forward_selection(X, y)
-best_backward = backward_selection(X, y)
+
+def get_metrics(best_models, X, y):
+    '''Get BIC criterion, Adjusted R^2, Mallows Cp'''
+    variance = np.var(y)
+    models = []
+#    pdb.set_trace()
+    for features in best_models:
+        rss, r_2 = fit_linear_reg(X[features], y)
+        mal_cp = mallow_cp(rss, variance, len(y), len(features))
+        bic = BIC(rss, variance, len(y), len(features))
+        adj_r2 = adjusted_r2(rss, y, len(features))
+        metadata = pd.DataFrame({'RSS' : rss, 'R_squared': r_2, 'Cp': mal_cp,\
+                                 'BIC': bic, 'adj_r2': adj_r2, 'numb_features':\
+                                 len(features), 'features': [features]})
+        models.append(metadata)
+    return pd.concat(models)
+#%%
+
 #%%
 beta = np.array([15, 2, 1])
 X, y = generate_response(100, 7, 3.8, beta, 10)
@@ -127,4 +141,8 @@ result_df = best_subset(X, y)
 result_df.sort_values(by=['R_squared'], ascending=False).head()
 result_df.sort_values(by=['BIC']).head()
 best_model = result_df.sort_values(by=['adj_r2'], ascending=False).head(1)
+best_forward = forward_selection(X, y)
+best_backward = backward_selection(X, y)
 #%%
+forward_metrics = get_metrics(best_forward, X, y)
+backward_metrics = get_metrics(best_backward, X, y)
