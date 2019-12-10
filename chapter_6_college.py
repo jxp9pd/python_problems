@@ -7,10 +7,11 @@ import matplotlib.pyplot as plt
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LassoCV
+from sklearn.linear_model import LassoCV, RidgeCV
 pd.set_option('display.max_columns', 20)
 
 WORK_PATH = "C:/Users/jopentak/Documents/"
+DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
 #%%
 def mallow_cp(RSS, var, n, d):
     """Calculates Mallows Cp"""
@@ -52,8 +53,15 @@ def fit_linear_reg(X, y):
     model_k.fit(X, y)
     mse = mean_squared_error(y, model_k.predict(X))
     R_squared = model_k.score(X, y)
-    print('Model performance with loss {0:.4f} and R^2: {0:.4f}'.format(mse, R_squared))
+    print('Model performance with loss {0:.4f} and R^2: {0:.4f}'.format(mse,
+          R_squared))
     return mse, model_k.score(X,y)
+
+def fit_lm(X, y):
+    """Produces a linear model for the given training data and response"""
+    model_k = linear_model.LinearRegression(fit_intercept=True)
+    model_k.fit(X, y)
+    return model_k
 
 def lasso_alpha(regr):
     """Produces a scatterplot for lambda selection"""
@@ -70,6 +78,11 @@ def lasso_fit(X, y, k):
     """Runs a lasso regression with k-fold cross-validation"""    
     regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
     lasso_alpha(regr)
+    return regr
+
+def ridge_fit(X, y, k):
+    """Runs a lasso regression with k-fold cross-validation"""    
+    regr = RidgeCV(cv=k).fit(X, y)
     return regr
 
 def forward_selection(X, y):
@@ -95,21 +108,31 @@ def forward_selection(X, y):
 
 def test_lm(X_test, y_test, model):
     """Produces test metrics for a given linear model"""
-    model.predict(X_test, y_test)
+    y_hat = model.predict(X_test.values)
+    mse = np.sum((y_test - y_hat)**2)/len(y_test)
+    return mse
+
 #%%
-college = pd.read_csv(WORK_PATH + 'college.csv')
+college = pd.read_csv(DATA_PATH + 'college.csv')
 college.set_index('Unnamed: 0', inplace=True)
 #%%
 college = pd.get_dummies(college)
 X = college.drop('Apps', axis=1)
 y = college.Apps
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-lin_model = fit_linear_reg(X_train['Accept'], y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+#lin_model = fit_linear_reg(X_train['Accept'], y_train)
 #%%
 forward_models = forward_selection(X_train, y_train)
 result_df = get_metrics(forward_models, X_test, y_test)
 best_features = result_df.sort_values(by=['BIC']).head(1).features[0]
-best_model = fit_linear_reg(X_train[best_features], y_train)
+#best_features = result_df.sort_values(by=['adj_r2'], ascending=False).head(1).features[0]
+best_model = fit_lm(X_train[best_features], y_train)
+regr = lasso_fit(X_train, y_train, 5)
+ridge_regr = ridge_fit(X_train, y_train, 5)
 #%%
-test_score = 
-print("Linear model performance: {0}".format())
+test_error = [test_lm(X_test[best_features], y_test, best_model), 
+              test_lm(X_test, y_test, regr), test_lm(X_test, y_test, ridge_regr)]
+print("Linear model MSE via forward selection: {0}".format(test_error[0]))
+print("Lasso Regression MSE: {0}".format(test_error[1]))
+print("Ridge Regression MSE: {0}".format(test_error[2]))
+
