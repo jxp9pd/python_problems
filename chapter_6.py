@@ -6,7 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tnrange
 from sklearn import linear_model
-from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LassoCV
 from sklearn.metrics import mean_squared_error
 pd.set_option('display.max_columns', 20)
@@ -149,6 +148,7 @@ def lasso_alpha(regr):
     plt.xlabel('Lambda value')
     plt.ylabel('5-Fold CV MSE')
     plt.scatter(alphas, mse_kfold)
+    plt.show()
 
 def lasso_fit(X, y, k):
     """Runs a lasso regression with k-fold cross-validation"""    
@@ -174,3 +174,5 @@ lasso_regr = lasso_fit(X, y, 5)
 lasso_regr.coef_
 lasso_regr.intercept_
 y.mean()
+#%%
+
