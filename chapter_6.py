@@ -35,6 +35,17 @@ def generate_response(n, mu, sigma, beta, d):
     y = features.dot(beta) + noise
     return X, y
 
+def generate_predictor(n, num_cols):
+    """Generates a predictor matrix. Each column is independently generated"""
+    mu = np.random.random(num_cols) * 10
+    sigma = np.random.random(num_cols) * 5
+    print(mu)
+    columns = []
+    for mean, std in zip(mu, sigma):
+        columns.append(np.random.normal(mean, std, n))
+    return pd.DataFrame(columns).T
+X = generate_predictor(1000, 20)
+
 #%%
 def mallow_cp(RSS, var, n, d):
     """Calculates Mallows Cp"""
