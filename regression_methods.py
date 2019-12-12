@@ -77,24 +77,6 @@ def get_MSE(model, X, y):
     """Returns MSE for a given model"""
     return mean_squared_error(y, model.predict(X))
 
-def get_metrics(best_models, X, y):
-    """Returns a dataframe of BIC criterion, Adjusted R^2, Mallows Cp
-        best_models -- List of generated models. Each model is represented as a
-        list of feature column names.
-    """
-    variance = np.var(y)
-    models = []
-    for features in best_models:
-        rss, r_2 = fit_linear_reg(X[features], y)
-        mal_cp = mallow_cp(rss, variance, len(y), len(features))
-        bic = BIC(rss, variance, len(y), len(features))
-        adj_r2 = adjusted_r2(rss, y, len(features))
-        metadata = pd.DataFrame({'RSS': rss, 'R_squared': r_2, 'Cp': mal_cp,
-                                 'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
-                                len(features), 'features': [features]})
-        models.append(metadata)
-    return pd.concat(models)
-
 def get_metric_df(best_features, best_models, X, y):
     """Returns a dataframe of BIC criterion, Adjusted R^2, Mallows Cp
         best_models -- List of generated models. Each model is represented as a
@@ -105,7 +87,6 @@ def get_metric_df(best_features, best_models, X, y):
     for features, model in zip(best_features, best_models):
         # pdb.set_trace()
         p = len(features)
-        print('Successfully calculated up to {0} features'.format(p))
         rss = get_MSE(model, X[features], y) * len(y)
         r_2 = model.score(X[features], y)
         mal_cp = mallow_cp(rss, variance, len(y), p)
@@ -115,7 +96,7 @@ def get_metric_df(best_features, best_models, X, y):
                                   'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
                                 p, 'features': [features], 'model': model})
         rows.append(metadata)
-    return "Hello World"
+    return pd.concat(rows)
 
 #%%
 #Model generation
@@ -173,9 +154,9 @@ def forward_selection(X, y):
         for feature in available_features:
             test_model = np.concatenate([curr_model, [feature]])
             lm = fit_lm(X[test_model], y)
-            rss = get_MSE(lm, X[test_model], y)
-            if rss < best_score:
-                best_score = rss
+            mse = get_MSE(lm, X[test_model], y)
+            if mse < best_score:
+                best_score = mse
                 best_feature = feature
         available_features.remove(best_feature)
         curr_model = np.append(curr_model, best_feature)
@@ -186,20 +167,23 @@ def forward_selection(X, y):
 def backward_selection(X, y):
     """Linear model selection via forward selection"""
     curr_model = list(X.columns)
-    best_models = [np.array(curr_model)]
+    best_models = [fit_lm(X[curr_model], y)]
+    best_features = [np.array(curr_model)]
     for i in range(1, X.shape[1]):
         best_score = sys.maxsize
         best_feature = -1
         for feature in curr_model:
-            test_model = X.drop(feature, axis=1)
-            rss, r_2 = fit_linear_reg(test_model, y)
-            if rss < best_score:
-                best_score = rss
+            test_X = X.drop(feature, axis=1)
+            lm = fit_lm(test_X, y)
+            mse = get_MSE(lm, test_X, y)
+            if mse < best_score:
+                best_score = mse
                 best_feature = feature
         X = X.drop(best_feature, axis=1)
         curr_model.remove(best_feature)
-        best_models.append(np.array(curr_model))
-    return best_models
+        best_features.append(np.array(curr_model))
+        best_models.append(fit_lm(X, y))
+    return best_features, best_models
 
 def mse_plot(num_features, test_mse, label):
     """Produces a test MSE plot"""

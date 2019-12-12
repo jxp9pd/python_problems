@@ -41,13 +41,10 @@ best_forward = regression_methods.forward_selection(X, y) #tuple 0 features, 1 m
 best_backward = regression_methods.backward_selection(X, y)
 
 #%%
-# forward_results = regression_methods.get_metric_df(best_forward[0], best_forward[1],
-#                                                    X, y)
+forward_results = regression_methods.get_metric_df(best_forward[0], best_forward[1],
+                                                    X, y)
 back_results = regression_methods.get_metric_df(best_backward[0], best_backward[1],
                                                    X, y)
-#%%
-forward_metrics = get_metrics(best_forward, X, y)
-backward_metrics = get_metrics(best_backward, X, y)
 #%%
 lasso_regr = lasso_fit(X, y, 5)
 lasso_regr.coef_
