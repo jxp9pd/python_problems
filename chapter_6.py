@@ -1,16 +1,10 @@
 """Linear Model Selection and Regularization"""
-import itertools
-import pdb
 import regression_methods
-import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from tqdm import tnrange
-from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LassoCV
-from sklearn.metrics import mean_squared_error
 pd.set_option('display.max_columns', 20)
 DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
 

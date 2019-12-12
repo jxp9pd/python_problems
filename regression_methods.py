@@ -115,8 +115,7 @@ def get_MSE(model, X, y):
 def best_subset(X, y):
     """Runs a linear model fit for every possible combination of features"""
     RSS_list, R_squared_list, feature_list = [], [], []
-    numb_features = []
-    models = []
+    models, numb_features = [], []
     #Looping over k = 1 to k = 11 features in X
     for k in tnrange(1, len(X.columns) + 1, desc='Loop...'):
         #Looping over all possible combinations: from 11 choose k
@@ -141,7 +140,7 @@ def best_subset(X, y):
 
 def forward_selection(X, y):
     """Linear model selection via forward selection"""
-    best_models = []
+    best_features, best_models = [], []
     curr_model = np.array([])
     available_features = list(X.columns)
     #Loop over each feature count.
@@ -151,15 +150,16 @@ def forward_selection(X, y):
         #Loop over possible one feature additions
         for feature in available_features:
             test_model = np.concatenate([curr_model, [feature]])
-            
-            rss, r_2 = fit_linear_reg(X[test_model], y)
+            lm = fit_lm(X[test_model], y)
+            rss = get_MSE(lm, X[test_model], y)
             if rss < best_score:
                 best_score = rss
                 best_feature = feature
         available_features.remove(best_feature)
         curr_model = np.append(curr_model, best_feature)
-        best_models.append(curr_model)
-    return best_models
+        best_features.append(curr_model)
+        best_models.append(fit_lm(X[curr_model], y))
+    return best_features, best_models
 
 def backward_selection(X, y):
     """Linear model selection via forward selection"""
