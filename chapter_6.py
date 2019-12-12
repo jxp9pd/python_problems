@@ -37,9 +37,14 @@ result_df.sort_values(by=['R_squared'], ascending=False).head()
 result_df.sort_values(by=['BIC']).head()
 result_df.sort_values(by=['adj_r2'], ascending=False).head(1)
 
-best_forward = regression_methods.forward_selection(X, y)
+best_forward = regression_methods.forward_selection(X, y) #tuple 0 features, 1 models
 best_backward = regression_methods.backward_selection(X, y)
 
+#%%
+# forward_results = regression_methods.get_metric_df(best_forward[0], best_forward[1],
+#                                                    X, y)
+back_results = regression_methods.get_metric_df(best_backward[0], best_backward[1],
+                                                   X, y)
 #%%
 forward_metrics = get_metrics(best_forward, X, y)
 backward_metrics = get_metrics(best_backward, X, y)

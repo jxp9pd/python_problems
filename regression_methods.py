@@ -73,6 +73,10 @@ def adjusted_r2(RSS, y, d):
     TSS = np.sum((y - np.mean(y))**2)
     return 1 - (RSS/(n - d - 1))/(TSS/(n-1))
 
+def get_MSE(model, X, y):
+    """Returns MSE for a given model"""
+    return mean_squared_error(y, model.predict(X))
+
 def get_metrics(best_models, X, y):
     """Returns a dataframe of BIC criterion, Adjusted R^2, Mallows Cp
         best_models -- List of generated models. Each model is represented as a
@@ -90,6 +94,29 @@ def get_metrics(best_models, X, y):
                                 len(features), 'features': [features]})
         models.append(metadata)
     return pd.concat(models)
+
+def get_metric_df(best_features, best_models, X, y):
+    """Returns a dataframe of BIC criterion, Adjusted R^2, Mallows Cp
+        best_models -- List of generated models. Each model is represented as a
+        list of feature column names.
+    """
+    variance = np.var(y)
+    rows = []
+    for features, model in zip(best_features, best_models):
+        # pdb.set_trace()
+        p = len(features)
+        print('Successfully calculated up to {0} features'.format(p))
+        rss = get_MSE(model, X[features], y) * len(y)
+        r_2 = model.score(X[features], y)
+        mal_cp = mallow_cp(rss, variance, len(y), p)
+        bic = BIC(rss, variance, len(y), p)
+        adj_r2 = adjusted_r2(rss, y, p)
+        metadata = pd.DataFrame({'RSS': rss, 'R_squared': r_2, 'Cp': mal_cp,
+                                  'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
+                                p, 'features': [features], 'model': model})
+        rows.append(metadata)
+    return "Hello World"
+
 #%%
 #Model generation
 def fit_linear_reg(X, Y):
@@ -105,11 +132,6 @@ def fit_lm(X, y):
     model_k = linear_model.LinearRegression(fit_intercept=True)
     model_k.fit(X, y)
     return model_k
-
-def get_MSE(model, X, y):
-    """Returns MSE for a given model"""
-    return mean_squared_error(y, model.predict(X))
-
 #%%
 #Model selection
 def best_subset(X, y):
