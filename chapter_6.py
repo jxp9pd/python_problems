@@ -170,14 +170,22 @@ def fit_lm(X, y):
     model_k.fit(X, y)
     return model_k
 
-def test_lm(X_test, y_test, model):
+def test_mse_plot(num_features, test_mse):
+    """Produces a test MSE plot"""
+    pdb.set_trace()
+    plt.title("Test MSE plot")
+    plt.xlabel("Number of features")
+    plt.ylabel("Test MSE")
+    plt.scatter(num_features, test_mse)
+    
+
+def test_lm(X_test, y_test, X_train, y_train, model_features):
     """Returns test MSE for the given feature set.
     Generates a regression model by stripping down X to the features given.
     Returns test MSE for the given data.
     """
-    #pdb.set_trace()
-    model = fit_lm(X_test[model], y_test)
-    y_hat = model.predict(X_test[model])
+    model = fit_lm(X_train[model_features], y_train)
+    y_hat = model.predict(X_test[model_features])
     mse = np.sum((y_test - y_hat)**2)/len(y_test)
     return mse
 
@@ -198,6 +206,7 @@ def lasso_fit(X, y, k):
     regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
     lasso_alpha(regr)
     return regr
+
 
 #%%
 beta = np.array([15, 2, 1])
@@ -225,6 +234,8 @@ s_X_train, s_X_test, s_y_train, s_y_test = train_test_split(sparse_X, sparse_y,
 result_df = forward_selection(s_X_train, s_y_train)
 result_df = get_metrics(result_df, s_X_train, s_y_train)
 #%%
-test_mse = result_df.apply(lambda x: test_lm(s_X_test, s_y_test, x.features), axis=1)
-
+result_df['testMSE'] = result_df.apply(lambda x: test_lm(s_X_test, s_y_test, \
+                                    s_X_train, s_y_train, x.features), axis=1)
+    
+test_mse_plot(result_df['numb_features'].values, result_df['testMSE'].values)
 
