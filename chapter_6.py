@@ -1,17 +1,19 @@
 """Linear Model Selection and Regularization"""
 import itertools
+import pdb
 import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tnrange
 from sklearn import linear_model
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LassoCV
 from sklearn.metrics import mean_squared_error
 pd.set_option('display.max_columns', 20)
 DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
 #%%
-def generate_x(n, mu, sigma, cols):
+def generate_predictor(n, mu, sigma, cols):
     """Generates a predictor matrix with the given parameters.
     A single vector is generated from a norm. Cols refers to the number of
     vectors produced. (e.g. cols = 2, returns x and x^2)
@@ -30,12 +32,12 @@ def generate_response(n, mu, sigma, beta, d):
     Feature matrix is created by above helper method.
     """
     noise = np.random.normal(0, 1, n)
-    X = generate_x(n, mu, sigma, d)
+    X = generate_predictor(n, mu, sigma, d)
     features = X.iloc[:, :len(beta)]
     y = features.dot(beta) + noise
     return X, y
 
-def generate_predictor(n, num_cols):
+def generate_x(n, num_cols):
     """Generates a predictor matrix. Each column is independently generated"""
     mu = np.random.random(num_cols) * 10
     sigma = np.random.random(num_cols) * 5
@@ -44,8 +46,19 @@ def generate_predictor(n, num_cols):
     for mean, std in zip(mu, sigma):
         columns.append(np.random.normal(mean, std, n))
     return pd.DataFrame(columns).T
-X = generate_predictor(1000, 20)
 
+def generate_y(n, p):
+    """Produces a 1-d response vector. Beta is randomly generated with half
+    of the p features set to 0. That's combined with the predictor generated
+    via generate_x
+    """
+    beta = np.random.random(p)
+    beta[beta<0.5] = 0
+    beta *= 5
+    noise = np.random.normal(0, 1, n)
+    X = generate_x(n, p)
+    y = X.dot(beta) + noise
+    return X, y
 #%%
 def mallow_cp(RSS, var, n, d):
     """Calculates Mallows Cp"""
@@ -79,6 +92,7 @@ def best_subset(X, y):
     for k in tnrange(1, len(X.columns) + 1, desc='Loop...'):
         #Looping over all possible combinations: from 11 choose k
         for combo in itertools.combinations(X.columns, k):
+#            pdb.set_trace()
             tmp_result = fit_linear_reg(X[list(combo)], y)   #Store temp result
             RSS_list.append(tmp_result[0])                   #Append lists
             R_squared_list.append(tmp_result[1])
@@ -149,6 +163,24 @@ def get_metrics(best_models, X, y):
                                 len(features), 'features': [features]})
         models.append(metadata)
     return pd.concat(models)
+
+def fit_lm(X, y):
+    """Produces a linear model for the given training data and response"""
+    model_k = linear_model.LinearRegression(fit_intercept=True)
+    model_k.fit(X, y)
+    return model_k
+
+def test_lm(X_test, y_test, model):
+    """Returns test MSE for the given feature set.
+    Generates a regression model by stripping down X to the features given.
+    Returns test MSE for the given data.
+    """
+    #pdb.set_trace()
+    model = fit_lm(X_test[model], y_test)
+    y_hat = model.predict(X_test[model])
+    mse = np.sum((y_test - y_hat)**2)/len(y_test)
+    return mse
+
 #%%
 def lasso_alpha(regr):
     """Produces a scatterplot for lambda selection"""
@@ -186,4 +218,13 @@ lasso_regr.coef_
 lasso_regr.intercept_
 y.mean()
 #%%
+sparse_X, sparse_y = generate_y(1000, 20)
+
+s_X_train, s_X_test, s_y_train, s_y_test = train_test_split(sparse_X, sparse_y,
+                                                            test_size=0.9)
+result_df = forward_selection(s_X_train, s_y_train)
+result_df = get_metrics(result_df, s_X_train, s_y_train)
+#%%
+test_mse = result_df.apply(lambda x: test_lm(s_X_test, s_y_test, x.features), axis=1)
+
 
