@@ -57,6 +57,12 @@ def generate_y(n, p):
     X = generate_x(n, p)
     y = X.dot(beta) + noise #y as a linear combination of X and beta + noise
     return X, y
+def get_coef_vector(features, model, p):
+    """Returns a full coefficient vector.
+    Model coef_ isn't aware of zero coefficients. Combining info between featu-
+    res and coef_ produces a full coeff. vector.
+    """
+    
 #%%
 #Regression regularization metrics
 def mallow_cp(RSS, var, n, d):
@@ -110,6 +116,7 @@ def fit_linear_reg(X, Y):
 
 def fit_lm(X, y):
     """Produces a linear model for the given training data and response"""
+    print(X.head())
     model_k = linear_model.LinearRegression(fit_intercept=True)
     model_k.fit(X, y)
     return model_k
@@ -136,9 +143,12 @@ def best_subset(X, y):
     df = pd.DataFrame({'numb_features': numb_features, 'RSS': RSS_list, 
                        'R_squared': R_squared_list, 'features': feature_list, 
                        'Model': models})
-    df['BIC'] = df.apply(lambda x: BIC(x.RSS, variance, len(y), len(x.features)), axis=1)
-    df['Cp'] = df.apply(lambda x: mallow_cp(x.RSS, variance, len(y), len(x.features)), axis=1)
-    df['adj_r2'] = df.apply(lambda x: adjusted_r2(x.RSS, y, len(x.features)), axis=1)
+    df['BIC'] = df.apply(lambda x: BIC(x.RSS, variance, len(y),
+                                       len(x.features)), axis=1)
+    df['Cp'] = df.apply(lambda x: mallow_cp(x.RSS, variance, len(y),
+                                            len(x.features)), axis=1)
+    df['adj_r2'] = df.apply(lambda x: adjusted_r2(x.RSS, y, len(x.features)),
+                            axis=1)
     return df
 
 def forward_selection(X, y):
@@ -152,6 +162,7 @@ def forward_selection(X, y):
         best_feature = -1
         #Loop over possible one feature additions
         for feature in available_features:
+            print(curr_model)
             test_model = np.concatenate([curr_model, [feature]])
             lm = fit_lm(X[test_model], y)
             mse = get_MSE(lm, X[test_model], y)

@@ -26,7 +26,6 @@ def lasso_fit(X, y, k):
     lasso_alpha(regr)
     return regr
 
-
 #%%
 beta = np.array([15, 2, 1])
 beta_2 = np.array([0, 0, 0, 0, 0, 0, 0.05])
@@ -52,7 +51,6 @@ lasso_regr.intercept_
 y.mean()
 #%%
 sparse_X, sparse_y = regression_methods.generate_y(1000, 20)
-
 s_X_train, s_X_test, s_y_train, s_y_test = train_test_split(sparse_X, sparse_y,
                                                             test_size=0.9)
 result_df = forward_selection(s_X_train, s_y_train)
