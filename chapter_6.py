@@ -53,19 +53,17 @@ y.mean()
 sparse_X, sparse_y = regression_methods.generate_y(1000, 20)
 s_X_train, s_X_test, s_y_train, s_y_test = train_test_split(sparse_X, sparse_y,
                                                             test_size=0.9)
-result_df = forward_selection(s_X_train, s_y_train)
-result_df = get_metrics(result_df, s_X_train, s_y_train)
+forward_2 = regression_methods.forward_selection(X, y)
+result_df = regression_methods.get_metric_df(forward_2[0], forward_2[1], X, y)
 #%%
-result_df['testMSE'] = result_df.apply(lambda x: test_lm(s_X_test, s_y_test, \
-                                    s_X_train, s_y_train, x.features), axis=1)
+result_df['testMSE'] = result_df.apply(lambda x: regression_methods.test_mse(
+    s_X_test, s_y_test, x['model'], x['features']), axis=1)
+result_df['trainMSE'] = result_df.apply(lambda x: regression_methods.train_mse(
+    s_X_train, s_y_train, x['model'], x['features']), axis=1)
 best_features = result_df.sort_values(by=['testMSE']).head(1)['features'][0]
 #%%
-result_df['trainMSE'] = result_df.apply(lambda x: fit_linear_reg(s_X_train\
-                                        [x.features], s_y_train)[0], axis=1)
-result_df['trainMSE'] = result_df['trainMSE']/len(s_y_train)
-#%%
-mse_plot(result_df['numb_features'].values, result_df['testMSE'].values, 
+regression_methods.mse_plot(result_df['numb_features'].values, result_df['testMSE'].values, 
          "Test MSE Plot")
-mse_plot(result_df['numb_features'].values, result_df['trainMSE'].values,
-         "Training MSE Plot")
 
+regression_methods.mse_plot(result_df['numb_features'].values, result_df['trainMSE'].values,
+         "Training MSE Plot")

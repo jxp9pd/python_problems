@@ -99,8 +99,8 @@ def get_metric_df(best_features, best_models, X, y):
         bic = BIC(rss, variance, len(y), p)
         adj_r2 = adjusted_r2(rss, y, p)
         metadata = pd.DataFrame({'RSS': rss, 'R_squared': r_2, 'Cp': mal_cp,
-                                  'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
-                                p, 'features': [features], 'model': model})
+                                 'BIC': bic, 'adj_r2': adj_r2, 'numb_features':
+                                  p, 'features': [features], 'model': model})
         rows.append(metadata)
     return pd.concat(rows)
 
@@ -203,7 +203,7 @@ def mse_plot(num_features, test_mse, label):
     plt.xlabel("Number of features")
     plt.ylabel("MSE")
     plt.scatter(num_features, test_mse)
-    plt.show()    
+    plt.show()  
 
 def test_lm(X_test, y_test, X_train, y_train, model_features):
     """Returns test MSE for the given feature set.
@@ -214,3 +214,13 @@ def test_lm(X_test, y_test, X_train, y_train, model_features):
     y_hat = model.predict(X_test[model_features])
     mse = np.sum((y_test - y_hat)**2)/len(y_test)
     return mse
+
+def train_mse(x_train, y_train, model, features):
+    """Returns the train MSE for a model"""
+    return mean_squared_error(y_train, model.predict(x_train[features]))
+
+def test_mse(x_test, y_test, model, features):
+    """Returns the test MSE for a model"""
+    return mean_squared_error(y_test, model.predict(x_test[features]))
+
+    
