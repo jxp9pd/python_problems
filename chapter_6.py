@@ -52,9 +52,9 @@ y.mean()
 sparse_X, sparse_y, beta = regression_methods.generate_y(1000, 20)
 s_X_train, s_X_test, s_y_train, s_y_test = train_test_split(sparse_X, sparse_y,
                                                             test_size=0.9)
-forward_2 = regression_methods.forward_selection(sparse_X, sparse_y)
+forward_2 = regression_methods.forward_selection(s_X_train, s_y_train)
 result_df = regression_methods.get_metric_df(forward_2[0], forward_2[1], 
-                                             sparse_X, sparse_y)
+                                             s_X_train, s_y_train)
 #%%
 result_df['testMSE'] = result_df.apply(lambda x: regression_methods.test_mse(
     s_X_test, s_y_test, x['model'], x['features']), axis=1)
@@ -71,5 +71,9 @@ regression_methods.mse_plot(result_df['numb_features'].values, result_df['trainM
          "Training MSE Plot")
 #%%
 #Compare true coefficient vector with produced one.
-selected_vector = regression_methods.get_coef_vector(best_features, best_model,
+ceoff_vectors = regression_methods.get_coef_vector(best_features, best_model,
                                                      20)
+coeff_vectors = result_df.apply(lambda x: regression_methods.get_coef_vector(
+    x['features'], x['model'], 20), axis=1)
+result_df['diff'] = coeff_vectors.apply(lambda x: regression_methods.coef_diffs(
+    x, beta))

@@ -72,6 +72,7 @@ def get_coef_vector(features, model, p):
         else:
             coeff_vector.append(0)
     return np.array(coeff_vector)
+
 #%%
 #Regression regularization metrics
 def mallow_cp(RSS, var, n, d):
@@ -202,7 +203,8 @@ def backward_selection(X, y):
         best_features.append(np.array(curr_model))
         best_models.append(fit_lm(X, y))
     return best_features, best_models
-
+#%%
+#Model Eval methods
 def mse_plot(num_features, test_mse, label):
     """Produces a test MSE plot"""
     #pdb.set_trace()
@@ -230,4 +232,6 @@ def test_mse(x_test, y_test, model, features):
     """Returns the test MSE for a model"""
     return mean_squared_error(y_test, model.predict(x_test[features]))
 
-    
+def coef_diffs(model_vector, beta):
+    """Returns a distance between model vector and parameter coefficients"""
+    return np.sqrt(np.power(model_vector - beta, 2).sum())
