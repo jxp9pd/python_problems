@@ -129,6 +129,23 @@ def fit_lm(X, y):
     model_k = linear_model.LinearRegression(fit_intercept=True)
     model_k.fit(X, y)
     return model_k
+
+def lasso_alpha(regr):
+    """Produces a scatterplot for lambda selection"""
+    mse_path = regr.mse_path_
+    mse_kfold = np.mean(mse_path, axis=1)
+    alphas = regr.alphas_
+    plt.title('Scatter plot lambda vs. MSE K-fold CV')
+    plt.xlabel('Lambda value')
+    plt.ylabel('5-Fold CV MSE')
+    plt.scatter(alphas, mse_kfold)
+    plt.show()
+
+def lasso_fit(X, y, k):
+    """Runs a lasso regression with k-fold cross-validation"""    
+    regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
+    lasso_alpha(regr)
+    return regr
 #%%
 #Model selection
 def best_subset(X, y):

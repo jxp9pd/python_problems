@@ -2,29 +2,9 @@
 import regression_methods
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LassoCV
 pd.set_option('display.max_columns', 20)
 DATA_PATH = '/Users/johnpentakalos/Documents/Research Data/'
-
-#%%
-def lasso_alpha(regr):
-    """Produces a scatterplot for lambda selection"""
-    mse_path = regr.mse_path_
-    mse_kfold = np.mean(mse_path, axis=1)
-    alphas = regr.alphas_
-    plt.title('Scatter plot lambda vs. MSE K-fold CV')
-    plt.xlabel('Lambda value')
-    plt.ylabel('5-Fold CV MSE')
-    plt.scatter(alphas, mse_kfold)
-    plt.show()
-
-def lasso_fit(X, y, k):
-    """Runs a lasso regression with k-fold cross-validation"""    
-    regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
-    lasso_alpha(regr)
-    return regr
 
 #%%
 beta = np.array([15, 2, 1])
@@ -44,7 +24,7 @@ forward_results = regression_methods.get_metric_df(best_forward[0], best_forward
 back_results = regression_methods.get_metric_df(best_backward[0], best_backward[1],
                                                    X, y)
 #%%
-lasso_regr = lasso_fit(X, y, 5)
+lasso_regr = regression_methods.lasso_fit(X, y, 5)
 lasso_regr.coef_
 lasso_regr.intercept_
 y.mean()
