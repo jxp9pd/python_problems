@@ -56,13 +56,22 @@ def generate_y(n, p):
     print(beta)
     X = generate_x(n, p)
     y = X.dot(beta) + noise #y as a linear combination of X and beta + noise
-    return X, y
+    return X, y, beta
+
 def get_coef_vector(features, model, p):
     """Returns a full coefficient vector.
     Model coef_ isn't aware of zero coefficients. Combining info between featu-
     res and coef_ produces a full coeff. vector.
     """
-    
+    model_coef = list(model.coef_)
+    coeff_vector = []
+    feature_set = set(features)
+    for i in range(p):
+        if i in feature_set:
+            coeff_vector.append(model_coef.pop(0))
+        else:
+            coeff_vector.append(0)
+    return np.array(coeff_vector)
 #%%
 #Regression regularization metrics
 def mallow_cp(RSS, var, n, d):
@@ -116,7 +125,6 @@ def fit_linear_reg(X, Y):
 
 def fit_lm(X, y):
     """Produces a linear model for the given training data and response"""
-    print(X.head())
     model_k = linear_model.LinearRegression(fit_intercept=True)
     model_k.fit(X, y)
     return model_k
@@ -162,7 +170,6 @@ def forward_selection(X, y):
         best_feature = -1
         #Loop over possible one feature additions
         for feature in available_features:
-            print(curr_model)
             test_model = np.concatenate([curr_model, [feature]])
             lm = fit_lm(X[test_model], y)
             mse = get_MSE(lm, X[test_model], y)
