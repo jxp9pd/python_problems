@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tnrange
+from sklearn.model_selection import KFold
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LassoCV
+from sklearn.linear_model import RidgeCV
 from sklearn.metrics import mean_squared_error
 #%%
 #Data Generators
@@ -101,7 +103,6 @@ def get_metric_df(best_features, best_models, X, y):
     variance = np.var(y)
     rows = []
     for features, model in zip(best_features, best_models):
-        # pdb.set_trace()
         p = len(features)
         rss = get_MSE(model, X[features], y) * len(y)
         r_2 = model.score(X[features], y)
@@ -145,6 +146,11 @@ def lasso_fit(X, y, k):
     """Runs a lasso regression with k-fold cross-validation"""    
     regr = LassoCV(cv=k, random_state=3, max_iter=200).fit(X, y)
     lasso_alpha(regr)
+    return regr
+
+def ridge_fit(X, y, k):
+    """Runs a ridge regression with k-fold cross-validation"""
+    regr = RidgeCV(alphas=np.arange(0.01, 1.5, 0.1), cv=5, store_cv_values=True)
     return regr
 #%%
 #Model selection
@@ -241,6 +247,18 @@ def test_lm(X_test, y_test, X_train, y_train, model_features):
     mse = np.sum((y_test - y_hat)**2)/len(y_test)
     return mse
 
+def kfold_test(X, y, features):
+    """Get the kfold error for a given set of features"""
+    kf = KFold(n_splits=5)
+    kfold_indices = kf.split(X)
+    total_mse = 0
+    for train_index, test_index in kfold_indices:
+        X_train, X_test, y_train, y_test = X.iloc[train_index], X.iloc[test_index],\
+            y[train_index], y[test_index]
+        model = fit_lm(X_train[features], y_train)
+        total_mse += test_mse(X_test, y_test, model, features)
+    return total_mse/5
+        
 def train_mse(x_train, y_train, model, features):
     """Returns the train MSE for a model"""
     return mean_squared_error(y_train, model.predict(x_train[features]))
