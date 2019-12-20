@@ -30,5 +30,3 @@ ridge_reg.cv_values_
 #Throw in kfold cross-vals for the selection models
 result_df['kfold_mse'] = result_df.apply(lambda x: regression_methods.kfold_test(
     boston_x, boston_y, x.features), axis=1)
-
-

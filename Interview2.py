@@ -25,5 +25,44 @@ def is_permute(str1, str2):
             return False
         my_dict[char] -= 1
     return True
-#%%
 is_permute('abab', 'baba')
+#%%
+import pdb
+def moveZeroes(nums):
+    """
+    Do not return anything, modify nums in-place instead.
+    """
+    zeros = 0
+    for i in range(len(nums)):
+        if nums[i-zeros] == 0:
+            nums.pop(i-zeros)
+            nums.append(0)
+            zeros += 1
+#%%
+test_nums = [0, 1, 0, 3, 12]
+moveZeroes(test_nums)
+print(test_nums)
+#%%
+def bounce(n):
+    if n >= 0:
+        bounce(n - 1)
+        print(n)
+        if n:
+            print(n)
+bounce(4)
+#%%
+def findDuplicate(nums):
+    pdb.set_trace()
+    i = nums[0]
+    j = nums[nums[0]]
+    while (nums[i] != nums[j]) and (i != j):
+        i = nums[i]
+        j = nums[nums[j]]
+    return nums[i]
+#%%
+test_1 = [1,3,4,2,2]
+print(findDuplicate(test_1))
+
+test_2 = [2,5,9,6,9,3,8,9,7,1]
+print(findDuplicate(test_2))
+

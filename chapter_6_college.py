@@ -135,4 +135,3 @@ test_error = [test_lm(X_test[best_features], y_test, best_model),
 print("Linear model MSE via forward selection: {0}".format(test_error[0]))
 print("Lasso Regression MSE: {0}".format(test_error[1]))
 print("Ridge Regression MSE: {0}".format(test_error[2]))
-
