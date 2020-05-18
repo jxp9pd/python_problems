@@ -65,4 +65,25 @@ print(findDuplicate(test_1))
 
 test_2 = [2,5,9,6,9,3,8,9,7,1]
 print(findDuplicate(test_2))
+#%%
+def sortColors(nums):
+    """
+    Do not return anything, modify nums in-place instead.
+    """
+    counter = [0,0,0]
+    for n in nums:
+        counter[n] += 1
+    i = 0 # Keeps track of which color to be filled
+    j = 0 # Keeps track of where to put the num.
+    while sum(counter) > 0:
+        if counter[i] == 0:
+            i += 1
+        else:
+            nums[j] = i
+            counter[i] -= 1
+            j += 1
+#%%
+test_1 = [2,0,2,1,1,0]
+sortColors(test_1)
+    
 

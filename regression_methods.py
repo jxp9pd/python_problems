@@ -258,7 +258,7 @@ def kfold_test(X, y, features):
         model = fit_lm(X_train[features], y_train)
         total_mse += test_mse(X_test, y_test, model, features)
     return total_mse/5
-        
+
 def train_mse(x_train, y_train, model, features):
     """Returns the train MSE for a model"""
     return mean_squared_error(y_train, model.predict(x_train[features]))
