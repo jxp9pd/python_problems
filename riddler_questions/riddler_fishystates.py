@@ -18,7 +18,6 @@ states.columns = ["States"]
 #Add a column for the unique characters in each word
 states["States"] = states["States"].str.replace(" ", "").str.lower()
 states['Unique_chars'] = states.apply(lambda x: ''.join(sorted(set(x['States']))), axis=1)
-word_list["Unique_chars"] = word_list.apply(lambda x: ''.join(sorted(set(x['words']))), axis=1)
 # word_list.drop_duplicates(subset="Unique_chars", inplace=True)
 #%%
 #Creating a map of which states to eliminate for a seen character
@@ -46,14 +45,21 @@ for index, row in word_list.iterrows():
         print("Found all the mackerels!")
         break
     else:
+        word = row["words"]
+        unique_chars = ''.join(set(word))
         poss_states = set(np.arange(0, 50))
-        for char in row["Unique_chars"]:
+        for char in unique_chars:
             poss_states = poss_states - STATE_MATCHER[char]
             # if you've already eliminated all states, just move on.
             # if len(poss_states) == 0:
             #     continue
         if len(poss_states) == 1:
-            mackerel_length = len(row["words"])
-            mackerels.append(row["words"])
+            mackerel_length = len(word)
+            mackerels.append(word)
             state_names.append(poss_states.pop())
-         
+mackerel_states = [states["States"].iloc[i] for i in state_names]
+#%%
+print("Found the following mackerel words:")
+for word, state in zip(mackerels, mackerel_states):
+    print("Mackerel word was {} for the state of {}".format(word, state))
+print("Longest word was {} letters long.".format(len(mackerels[0])))
